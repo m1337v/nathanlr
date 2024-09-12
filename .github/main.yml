@@ -1,0 +1,65 @@
+name: Build and Release IPA
+
+on:
+  push:
+    branches:
+      - '*'
+    paths-ignore:
+      - ".gitignore"
+  pull_request:
+    branches:
+      - '*'
+    paths-ignore:
+      - ".gitignore"
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 1 1 *'
+    - cron: '0 0 1 4 *'
+    - cron: '0 0 30 6 *'
+    - cron: '0 0 28 9 *'
+    - cron: '0 0 27 12 *'
+
+jobs:
+  build_and_release:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up build environment
+        run: mkdir -p build/DerivedData
+
+      - name: Build IPA
+        run: |
+          set -e
+          echo "Building IPA"
+          xcodebuild clean build -scheme NathanLR -configuration Release -derivedDataPath build/DerivedData CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED="NO"
+          echo "Done building"
+          cd build/DerivedData/Build/Products/Release-iphoneos
+          rm -rf Payload
+          rm -rf nathanlr.tipa
+          mkdir Payload
+          mv NathanLR.app Payload
+          ldid -S../../../../../usprebooter/usprebooter.entitlements Payload/NathanLR.app/NathanLR -Ipisshill.usprebooter
+          ../../../../../macbins/ct_bypass -i Payload/NathanLR.app/NathanLR -o Payload/NathanLR.app/NathanLR -r
+          ../../../../../macbins/ct_bypass -i Payload/NathanLR.app/libxpf.dylib -o Payload/NathanLR.app/libxpf.dylib -r
+          cp ../../../../../bins/* Payload/NathanLR.app/
+          zip -vr nathanlr.tipa Payload/ -x "*.DS_Store"
+          rm -rf Payload
+          cd ../../../../../
+
+      - name: Create or Update Release and Upload Asset
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: nathanlr  # Use the tag or commit ref
+          release_name: NathanLR Beta Release
+          body: |
+            These are automatically updated builds of the latest commit.
+          draft: false
+          prerelease: false
+          overwrite: true
+          files: build/DerivedData/Build/Products/Release-iphoneos/nathanlr.tipa
