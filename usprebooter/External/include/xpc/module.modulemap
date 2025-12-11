@@ -6,5 +6,6 @@ module XPC [system] [extern_c] {
 	header "connection.h"
 	header "debug.h"
 	header "endpoint.h"
+	header "launchd.h"
 	export *
 }
