@@ -6,8 +6,8 @@
 //
 #include <mach/arm/kern_return.h>
 #include "troller.h"
-#include <xpc/xpc.h> // copy from macOS
-#include <xpc/connection.h> // copy from macOS
+#include "xpc/xpc.h"
+#include "xpc/connection.h"
 // #include <bootstrap.h> // copy from macOS, launch.h from macOS
 #include <stdio.h>
 #include <unistd.h>

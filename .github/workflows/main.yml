@@ -1,0 +1,45 @@
+name: Build and Release IPA
+
+on:
+  push:
+    branches: [ "*" ]
+    paths-ignore:
+      - ".gitignore"
+  workflow_dispatch:
+
+jobs:
+  build_and_release:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Make build.sh executable
+        run: chmod +x build.sh
+
+      - name: Install dependencies
+        run: |
+          brew install ldid zip
+          # codesign is already available on macOS runners
+
+      - name: Remove restricted XPC headers
+        run: |
+          rm -rf $(xcrun --sdk iphoneos --show-sdk-path)/usr/include/xpc $(xcrun --sdk iphoneos --show-sdk-path)/usr/include/xpc.modulemap
+
+      - name: Run build script
+        run: ./build.sh
+
+      - name: Upload Release to GitHub
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: nathanlr
+          release_name: "NathanLR Beta Release"
+          body: |
+            Automatically updated build from latest commit.
+          draft: false
+          prerelease: false
+          overwrite: true
+          files: build/DerivedData/Build/Products/Release-iphoneos/nathanlr.tipa
