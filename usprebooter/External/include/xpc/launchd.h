@@ -11,7 +11,7 @@
 const char *xpc_strerror(int error);
 xpc_object_t xpc_copy_entitlement_for_token(const char *, audit_token_t *);
 int xpc_pipe_routine_reply(xpc_object_t);
-int xpc_pipe_try_receive(mach_port_t, xpc_object_t *, mach_port_t *,
+int xpc_pipe_try_receive(mach_port_t p, xpc_object_t *message, mach_port_t *recvp, dispatch_mig_callback_t callout, size_t maxmsgsz, uint64_t flags),
     boolean_t (*)(mach_msg_header_t *, mach_msg_header_t *), mach_msg_size_t, int);
 kern_return_t xpc_call_wakeup(mach_port_t, int);
 void xpc_dictionary_get_audit_token(xpc_object_t, audit_token_t *);
